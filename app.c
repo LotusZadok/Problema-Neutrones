@@ -129,6 +129,14 @@ void crear_archivo_csv(const char *filename, Element elements[], int num_element
 }
 
 /*
+Función para obtener un determinante de una matrix 2x2
+*/
+double calcularDeterminante(double matriz[2][2]) {
+    return matriz[0][0] * matriz[1][1] - matriz[0][1] * matriz[1][0];
+}
+
+
+/*
 Función principal que organiza la ejecución del programa
 */
 int main()
@@ -141,7 +149,7 @@ int main()
         return 1;
     }
 
-    double sum_ln_x = sumatoria_ln_x(num_elements, elements);
+    double sum_ln_x = sumatoria_ln_x(num_elements, elements); 
     double sum_ln_y = sumatoria_ln_y(num_elements, elements);
     double sum_ln_x_squared = sumatoria_ln_x_cuadrado(num_elements, elements);
     double sum_ln_x_ln_y = sumatoria_ln_x_ln_y(num_elements, elements);
@@ -154,15 +162,55 @@ int main()
 
     double n = num_elements;
     double denominator = n * sum_ln_x_squared - sum_ln_x * sum_ln_x;
+    printf("Denominador = %f\n", denominator);
     if (denominator == 0)
     {
         fprintf(stderr, "Error: el denominador es cero.\n");
         return 1;
     }
-
+    /*
     double ln_a = (sum_ln_y * sum_ln_x_squared - sum_ln_x * sum_ln_x_ln_y) / denominator;
+    printf("ln(a): %f\n", ln_a);
+
     double b = (n * sum_ln_x_ln_y - sum_ln_x * sum_ln_y) / denominator;
+    printf("b: %f\n", b);
+
     double a = exp(ln_a);
+    printf("a: %f\n", a);
+    */
+
+    /*Configuracion de las matrices*/
+
+    /*Denominador*/
+    double matrizPrincipal[2][2] = {
+        {n, sum_ln_x},
+        {sum_ln_x, sum_ln_x_squared}
+    };
+
+    /*ln(a)*/
+    double matrizA[2][2] = {
+        {sum_ln_y, sum_ln_x},
+        {sum_ln_x_ln_y, sum_ln_x_squared}
+    };
+
+    /*b*/
+    double matrizB[2][2] = {
+        {n, sum_ln_x},
+        {sum_ln_y, sum_ln_x_ln_y}
+    };
+
+    
+
+    /*Resolvemos el sistema para a y b*/
+    float det_principal = calcularDeterminante(matrizPrincipal);
+    float det_a = calcularDeterminante(matrizA);
+    float det_b = calcularDeterminante(matrizB);
+    
+    /*Regla de cramer*/
+    double a = exp(det_a/det_principal);
+    double b = det_b/det_principal;
+
+
 
     printf("Parámetros de ajuste: a = %f, b = %f\n\n", a, b);
 
