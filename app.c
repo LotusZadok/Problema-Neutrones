@@ -135,90 +135,64 @@ double calcularDeterminante(double matriz[2][2]) {
     return matriz[0][0] * matriz[1][1] - matriz[0][1] * matriz[1][0];
 }
 
-
-/*
-Función principal que organiza la ejecución del programa
-*/
-int main()
-{
-    Element elements[100];
-    int num_elements = leer_datos("elements.txt", elements, 100);
-    if (num_elements == 0)
-    {
-        fprintf(stderr, "Error al leer los datos del archivo.\n");
-        return 1;
-    }
-
+double* calcular_A_y_B(int num_elements, Element elements[]) {
     double sum_ln_x = sumatoria_ln_x(num_elements, elements); 
     double sum_ln_y = sumatoria_ln_y(num_elements, elements);
     double sum_ln_x_squared = sumatoria_ln_x_cuadrado(num_elements, elements);
     double sum_ln_x_ln_y = sumatoria_ln_x_ln_y(num_elements, elements);
 
-    if (num_elements == 0 || sum_ln_x == 0 || sum_ln_y == 0 || sum_ln_x_squared == 0 || sum_ln_x_ln_y == 0)
-    {
-        fprintf(stderr, "Error en el cálculo de sumatorias.\n");
-        return 1;
-    }
-
     double n = num_elements;
     double denominator = n * sum_ln_x_squared - sum_ln_x * sum_ln_x;
-    printf("Denominador = %f\n", denominator);
-    if (denominator == 0)
-    {
-        fprintf(stderr, "Error: el denominador es cero.\n");
-        return 1;
-    }
-    /*
-    double ln_a = (sum_ln_y * sum_ln_x_squared - sum_ln_x * sum_ln_x_ln_y) / denominator;
-    printf("ln(a): %f\n", ln_a);
 
-    double b = (n * sum_ln_x_ln_y - sum_ln_x * sum_ln_y) / denominator;
-    printf("b: %f\n", b);
+    /* Configuracion de las matrices */
 
-    double a = exp(ln_a);
-    printf("a: %f\n", a);
-    */
-
-    /*Configuracion de las matrices*/
-
-    /*Denominador*/
+    /* Denominador */
     double matrizPrincipal[2][2] = {
         {n, sum_ln_x},
         {sum_ln_x, sum_ln_x_squared}
     };
 
-    /*ln(a)*/
+    /* ln(a) */
     double matrizA[2][2] = {
         {sum_ln_y, sum_ln_x},
         {sum_ln_x_ln_y, sum_ln_x_squared}
     };
 
-    /*b*/
+    /* b */
     double matrizB[2][2] = {
         {n, sum_ln_x},
         {sum_ln_y, sum_ln_x_ln_y}
     };
 
-    
-
-    /*Resolvemos el sistema para a y b*/
+    /* Resolvemos el sistema para a y b */
     float det_principal = calcularDeterminante(matrizPrincipal);
     float det_a = calcularDeterminante(matrizA);
     float det_b = calcularDeterminante(matrizB);
-    
-    /*Regla de cramer*/
-    double a = exp(det_a/det_principal);
-    double b = det_b/det_principal;
 
+    /* Regla de Cramer */
+    double a = exp(det_a / det_principal);
+    double b = det_b / det_principal;
 
+    // Crear un array dinámico para almacenar los valores de A y B
+    double* resultado = (double*)malloc(2 * sizeof(double));
+    if (resultado == NULL) {
+        printf("Error: No se pudo asignar memoria.\n");
+        exit(1);
+    }
 
+    resultado[0] = a;
+    resultado[1] = b;
+
+    return resultado;
+}
+
+void imprimir_resultados(double a, double b, Element elements[], int num_elements) {
     printf("Parámetros de ajuste: a = %f, b = %f\n\n", a, b);
 
     printf("%-4s %-20s %-8s %-15s %-15s %-15s\n", "No.", "Nombre", "Atómico", "Neutrones Reales", "Neutrones Predichos", "Redondeo al más cercano", "Redondeo hacia cero");
     printf("------------------------------------------------------------------------------------------------------------------\n");
 
-    for (int i = 0; i < num_elements; i++)
-    {
+    for (int i = 0; i < num_elements; i++) {
         double predicted_neutrons = a * pow(elements[i].atomic_number, b);
         int rounded_nearest = round(predicted_neutrons);
         int rounded_down = floor(predicted_neutrons);
@@ -228,6 +202,21 @@ int main()
     }
 
     crear_archivo_csv("datos.csv", elements, num_elements, a, b);
+}
+
+
+/*
+Función principal que organiza la ejecución del programa
+*/
+int main() {
+    Element elements[100];
+    int num_elements = leer_datos("elements.txt", elements, 100);
+
+    double *AB = calcular_A_y_B(num_elements, elements);
+    double a = AB[0];
+    double b = AB[1];
+
+    imprimir_resultados(a, b, elements, num_elements);
 
     return 0;
 }
